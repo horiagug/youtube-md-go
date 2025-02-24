@@ -10,8 +10,8 @@ import (
 	"github.com/horiagug/youtube-md-go/config"
 	"github.com/horiagug/youtube-md-go/internal/playlist"
 	"github.com/horiagug/youtube-md-go/internal/repository"
-	"github.com/horiagug/youtube-transcript-api-go/pkg/client"
-	"github.com/horiagug/youtube-transcript-api-go/pkg/models"
+	"github.com/horiagug/youtube-transcript-api-go/pkg/yt_transcript"
+	"github.com/horiagug/youtube-transcript-api-go/pkg/yt_transcript_models"
 	"google.golang.org/genai"
 )
 
@@ -20,13 +20,13 @@ type Service interface {
 }
 
 type service struct {
-	transcriptService *client.Client
+	transcriptService *yt_transcript.YtTranscriptClient
 	genaiClient       *genai.Client
 	config            *config.Config
 }
 
 type transcriptServiceResults struct {
-	transcripts []models.Transcript
+	transcripts []yt_transcript_models.Transcript
 	err         error
 }
 
@@ -39,7 +39,7 @@ func NewService(ctx context.Context, cfg *config.Config) (service, error) {
 		return service{}, err
 	}
 
-	transcriptService := client.NewClient()
+	transcriptService := yt_transcript.NewClient()
 
 	return service{
 		transcriptService: transcriptService,
@@ -91,7 +91,7 @@ func (m service) Generate(ctx context.Context, videoURL string) error {
 	}()
 
 	// Collect results
-	var transcripts []models.Transcript
+	var transcripts []yt_transcript_models.Transcript
 	for result := range results {
 		if result.err != nil {
 			return fmt.Errorf("Error getting transcript for %v", result.err)
@@ -107,7 +107,7 @@ func (m service) Generate(ctx context.Context, videoURL string) error {
 	return nil
 }
 
-func (m *service) processTranscripts(ctx context.Context, transcripts []models.Transcript) (string, error) {
+func (m *service) processTranscripts(ctx context.Context, transcripts []yt_transcript_models.Transcript) (string, error) {
 	var chunks []string
 	currentChunk := make([]string, 0, 3000)
 	wordCount := 0
