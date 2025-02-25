@@ -12,11 +12,6 @@ import (
 	"github.com/horiagug/youtube-md-go/pkg/youtube_md"
 )
 
-// "gemini-1.5-flash",
-// "gemini-1.5-pro",
-// "gemini-2.0-flash",
-// "gemini-2.0-flash-thinking-exp-01-21",
-
 func getGeminiAPIKey() (string, error) {
 	apiKey := os.Getenv("GEMINI_API_KEY")
 	if apiKey == "" {
@@ -56,9 +51,27 @@ func main() {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
-	err = client.GenerateMarkdown(flag.Arg(0))
+	statusChan := make(chan string)
+	doneChan := make(chan bool)
+
+	// Progress indicator routine
+	go func() {
+		for {
+			select {
+			case status := <-statusChan:
+				fmt.Printf("\r\033[K%s...", status)
+			case <-doneChan:
+				fmt.Println("\r\033[KDone!")
+				return
+			}
+		}
+	}()
+
+	err = client.GenerateMarkdown(flag.Arg(0), statusChan)
 	if err != nil {
 		log.Fatalf("Failed to generate markdown: %v", err)
+		doneChan <- true
 	}
+	doneChan <- true
 	os.Exit(0)
 }

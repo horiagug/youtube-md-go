@@ -16,7 +16,7 @@ import (
 )
 
 type Service interface {
-	Generate(ctx context.Context, videoID string) error
+	Generate(ctx context.Context, videoID string, statusChan *chan string) error
 }
 
 type service struct {
@@ -48,9 +48,14 @@ func NewService(ctx context.Context, cfg *config.Config) (service, error) {
 	}, nil
 }
 
-func (m service) Generate(ctx context.Context, videoURL string) error {
+func (m service) Generate(ctx context.Context, videoURL string, statusChan *chan string) error {
 	videoURLs := []string{}
+
+	*statusChan <- fmt.Sprintf("Processing video: %v", videoURL)
+
 	if strings.Contains(videoURL, "playlist?list=") {
+
+		*statusChan <- fmt.Sprintf("Processing playlist: %v", videoURL)
 		p, err := playlist.NewPlaylist(videoURL)
 		if err != nil {
 			return fmt.Errorf("Error creating playlist: %v", err)
@@ -67,6 +72,7 @@ func (m service) Generate(ctx context.Context, videoURL string) error {
 		videoURLs = append(videoURLs, videoURL)
 	}
 
+	*statusChan <- fmt.Sprintf("Fetching transcripts for %v videos", len(videoURLs))
 	// Create channel for results
 	results := make(chan transcriptServiceResults, len(videoURLs))
 	var wg sync.WaitGroup
@@ -99,7 +105,9 @@ func (m service) Generate(ctx context.Context, videoURL string) error {
 		transcripts = append(transcripts, result.transcripts...)
 	}
 
-	_, err := m.processTranscripts(ctx, transcripts)
+	*statusChan <- fmt.Sprintf("Generating markdown for %v transcript(s)", len(transcripts))
+
+	err := m.processTranscripts(ctx, transcripts, statusChan)
 	if err != nil {
 		return fmt.Errorf("Error processing transcripts: %v", err)
 	}
@@ -107,7 +115,7 @@ func (m service) Generate(ctx context.Context, videoURL string) error {
 	return nil
 }
 
-func (m *service) processTranscripts(ctx context.Context, transcripts []yt_transcript_models.Transcript) (string, error) {
+func (m *service) processTranscripts(ctx context.Context, transcripts []yt_transcript_models.Transcript, statusChan *chan string) error {
 	var chunks []string
 	currentChunk := make([]string, 0, 3000)
 	wordCount := 0
@@ -137,12 +145,15 @@ func (m *service) processTranscripts(ctx context.Context, transcripts []yt_trans
 
 	file, err := os.OpenFile("output.md", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return "", fmt.Errorf("Error opening file: %v", err)
+		return fmt.Errorf("Error opening file: %v", err)
 	}
 
+	percent_done := 0
 	defer file.Close()
 	previous_response := ""
-	for _, chunk := range chunks {
+	*statusChan <- fmt.Sprintf("Progress: %v%%", percent_done)
+
+	for i, chunk := range chunks {
 		context_prompt := ""
 		if previous_response != "" {
 			context_prompt = fmt.Sprintf("The following text is a continuation... \nPrevious response: \n %s \n \n New text to process(Do Not Repeat the Previous response:): \n", previous_response)
@@ -158,16 +169,18 @@ func (m *service) processTranscripts(ctx context.Context, transcripts []yt_trans
 
 		response, err := m.genaiClient.Models.GenerateContent(ctx, m.config.GeminiModel, content, nil)
 		if err != nil {
-			return "", fmt.Errorf("Error generating content: %v", err)
+			return fmt.Errorf("Error generating content: %v", err)
 		}
 
 		responseText := response.Candidates[0].Content.Parts[0].Text
 
 		if _, err := file.WriteString(responseText + "\n"); err != nil {
-			return "", fmt.Errorf("Error writing to file: %v", err)
+			return fmt.Errorf("Error writing to file: %v", err)
 		}
 		previous_response = responseText
 
+		percent_done = int((float64(i+1) / float64(len(chunks))) * 100)
+		*statusChan <- fmt.Sprintf("Progress: %v%%", percent_done)
 	}
-	return "", nil
+	return nil
 }

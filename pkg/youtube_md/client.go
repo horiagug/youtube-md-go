@@ -47,6 +47,6 @@ func New(cfg *config.Config, opts ...ClientOption) (*Client, error) {
 	return client, nil
 }
 
-func (c *Client) GenerateMarkdown(videoID string) error {
-	return c.markdownService.Generate(c.ctx, videoID)
+func (c *Client) GenerateMarkdown(videoID string, statusChan chan string) error {
+	return c.markdownService.Generate(c.ctx, videoID, &statusChan)
 }
