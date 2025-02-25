@@ -24,7 +24,7 @@ A Go-based tool that converts YouTube video transcripts into well-structured mar
 ## Installation
 
 ```bash
-go get github.com/horiagug/youtube-md-go
+go install github.com/horiagug/youtube-md-go
 ```
 
 ## Configuration
