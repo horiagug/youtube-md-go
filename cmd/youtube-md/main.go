@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/horiagug/youtube-md-go/config"
+	"github.com/horiagug/youtube-md-go/pkg/config"
 	"github.com/horiagug/youtube-md-go/pkg/youtube_md"
 )
 
@@ -44,7 +44,7 @@ func main() {
 		config.WithGeminiModel(*geminiAPIModel),
 	)
 
-	client, err := youtube_md.New(cfg,
+	client, err := youtube_md.NewClient(cfg,
 		youtube_md.WithTimeout(*timeout),
 	)
 	if err != nil {

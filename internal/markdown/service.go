@@ -7,9 +7,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/horiagug/youtube-md-go/config"
 	"github.com/horiagug/youtube-md-go/internal/playlist"
 	"github.com/horiagug/youtube-md-go/internal/repository"
+	"github.com/horiagug/youtube-md-go/pkg/config"
 	"github.com/horiagug/youtube-transcript-api-go/pkg/yt_transcript"
 	"github.com/horiagug/youtube-transcript-api-go/pkg/yt_transcript_models"
 	"google.golang.org/genai"

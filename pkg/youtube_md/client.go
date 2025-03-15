@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/horiagug/youtube-md-go/config"
 	"github.com/horiagug/youtube-md-go/internal/markdown"
+	"github.com/horiagug/youtube-md-go/pkg/config"
 )
 
 type Client struct {
@@ -27,7 +27,7 @@ func WithTimeout(timeout time.Duration) ClientOption {
 	}
 }
 
-func New(cfg *config.Config, opts ...ClientOption) (*Client, error) {
+func NewClient(cfg *config.Config, opts ...ClientOption) (*Client, error) {
 	client := &Client{
 		config: cfg,
 		ctx:    context.Background(),
