@@ -24,7 +24,7 @@ func main() {
 	var (
 		languages      = flag.String("languages", "en", "Comma-separated list of language codes")
 		geminiAPIKey   = flag.String("gemini-api-key", "", "Gemini API Key")
-		geminiAPIModel = flag.String("gemini-api-model", "gemini-2.0-flash", "Gemini API Key")
+		geminiAPIModel = flag.String("gemini-api-model", "gemini-2.0-flash", "Gemini API Model")
 		timeout        = flag.Duration("timeout", 60*time.Second, "Operation timeout")
 	)
 	flag.Parse()
@@ -67,7 +67,7 @@ func main() {
 		}
 	}()
 
-	err = client.GenerateMarkdown(flag.Arg(0), statusChan)
+	err = client.GenerateMarkdownFile(flag.Arg(0), statusChan)
 	if err != nil {
 		log.Fatalf("Failed to generate markdown: %v", err)
 		doneChan <- true
