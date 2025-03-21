@@ -26,6 +26,7 @@ func main() {
 		geminiAPIKey   = flag.String("gemini-api-key", "", "Gemini API Key")
 		geminiAPIModel = flag.String("gemini-api-model", "gemini-2.0-flash", "Gemini API Model")
 		timeout        = flag.Duration("timeout", 60*time.Second, "Operation timeout")
+		file           = flag.Bool("file", false, "Write to output file")
 	)
 	flag.Parse()
 
@@ -67,11 +68,21 @@ func main() {
 		}
 	}()
 
-	err = client.GenerateMarkdownFile(flag.Arg(0), statusChan)
-	if err != nil {
-		log.Fatalf("Failed to generate markdown: %v", err)
+	if *file == true {
+		err := client.GenerateMarkdownFile(flag.Arg(0), statusChan)
+		if err != nil {
+			log.Fatalf("Failed to generate markdown: %v", err)
+		}
 		doneChan <- true
+	} else {
+		res, err := client.GenerateMarkdown(flag.Arg(0))
+		if err != nil {
+			log.Fatalf("Failed to generate markdown: %v", err)
+			doneChan <- true
+		}
+		doneChan <- true
+		fmt.Println(res)
 	}
-	doneChan <- true
+
 	os.Exit(0)
 }
