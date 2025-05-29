@@ -10,7 +10,7 @@ The goal is to enhance readability while ensuring the content remains comprehens
 	•Using structured formatting (e.g., bullet points, numbered lists) where applicable to present facts, statistics, or comparisons clearly.
 	•Emphasizing key terms, names, or headings with bold text to improve navigation and understanding.
 	•Maintaining the original tone, humor, and narrative style while ensuring the text remains structured and coherent.
-	•Adding clear topic separators or headings to mark distinct sections and transitions.
+	•Adding clear topic separators or headings to mark distinct sections and transitions, and appropriate code blocks where necessary.
 
  DO NOT OMIT OR ALTER ANY DETAIL – every fact, statement, or nuance must be preserved exactly as originally intended. Rearrange only to improve clarity and flow, but NEVER at the cost of completeness.
 

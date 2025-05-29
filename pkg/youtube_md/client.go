@@ -55,3 +55,8 @@ func (c *Client) GenerateMarkdown(videoId string) (string, error) {
 	res, err := c.markdownService.GenerateMarkdown(c.ctx, videoId)
 	return res, err
 }
+
+func (c *Client) GenerateMarkdownData(videoId string) (*markdown.MarkdownData, error) {
+	res, err := c.markdownService.GenerateMarkdownData(c.ctx, videoId)
+	return res, err
+}

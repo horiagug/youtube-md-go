@@ -32,11 +32,13 @@ go install github.com/horiagug/youtube-md-go
 Set your Gemini API key using one of these methods:
 
 1. Environment variable:
+
 ```bash
 export GEMINI_API_KEY=your_api_key_here
 ```
 
 2. Command-line flag:
+
 ```bash
 --gemini-api-key=your_api_key_here
 ```
@@ -59,16 +61,19 @@ youtube-md-go [flags] <youtube-url>
 ### Examples
 
 Process a single video:
+
 ```bash
 youtube-md-go "https://www.youtube.com/watch?v=video_id"
 ```
 
 Process a playlist:
+
 ```bash
 youtube-md-go "https://www.youtube.com/playlist?list=playlist_id"
 ```
 
 With custom settings:
+
 ```bash
 youtube-md-go --languages=en,es "https://www.youtube.com/watch?v=video_id"
 ```
@@ -76,6 +81,7 @@ youtube-md-go --languages=en,es "https://www.youtube.com/watch?v=video_id"
 ## Output
 
 The tool generates a markdown file (`output.md`) containing the structured content. The output includes:
+
 - Organized sections with headings
 - Formatted lists and bullet points
 - Emphasized key terms
@@ -87,7 +93,8 @@ The tool generates a markdown file (`output.md`) containing the structured conte
 - gemini-1.5-pro
 - gemini-2.0-flash
 - gemini-2.0-flash-thinking-exp-01-21
-
+- gemini-2.5-flash
+- gemini-2.5-pro
 
 ## Contributing
 

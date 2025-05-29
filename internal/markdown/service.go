@@ -12,6 +12,7 @@ import (
 type Service interface {
 	GenerateMarkdownFile(ctx context.Context, videoID string, statusChan *chan string) error
 	GenerateMarkdown(ctx context.Context, videoID string) (string, error)
+	GenerateMarkdownData(ctx context.Context, videoID string) (*MarkdownData, error)
 }
 
 type service struct {
@@ -84,4 +85,30 @@ func (m service) GenerateMarkdownFile(ctx context.Context, videoUrl string, stat
 		return fmt.Errorf("Error processing transcripts: %v", err)
 	}
 	return nil
+}
+
+type MarkdownData struct {
+	Markdown   string
+	VideoUrl   string
+	VideoId    string
+	VideoTitle string
+}
+
+func (m service) GenerateMarkdownData(ctx context.Context, videoUrl string) (*MarkdownData, error) {
+	videoURLs, err := m.getVideosFromUrl(videoUrl)
+
+	if err != nil {
+		return nil, fmt.Errorf("Error getting video from url")
+	}
+
+	transcripts, err := m.fetchTranscriptsForVideos(videoURLs)
+	if err != nil {
+		return nil, fmt.Errorf("Error fetching transcripts: %v", err)
+	}
+
+	markdown_text, err := m.generateMarkdownFromTranscripts(ctx, transcripts)
+	if err != nil {
+		return nil, fmt.Errorf("Error processing transcripts: %v", err)
+	}
+	return &MarkdownData{Markdown: markdown_text, VideoUrl: fmt.Sprintf("https://www.youtube.com/watch?v=%s", transcripts[0].VideoID), VideoId: transcripts[0].VideoID, VideoTitle: transcripts[0].VideoTitle}, nil
 }
