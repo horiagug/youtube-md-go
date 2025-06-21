@@ -10,6 +10,8 @@ import (
 	"github.com/horiagug/youtube-md-go/internal/playlist"
 	"github.com/horiagug/youtube-md-go/internal/repository"
 	"github.com/horiagug/youtube-transcript-api-go/pkg/yt_transcript_models"
+	"golang.org/x/text/language"
+	"golang.org/x/text/language/display"
 	"google.golang.org/genai"
 )
 
@@ -36,7 +38,7 @@ func (m service) getVideosFromUrl(videoUrl string) ([]string, error) {
 	return videoURLs, nil
 }
 
-func (m service) fetchTranscriptsForVideos(videoUrls []string) ([]yt_transcript_models.Transcript, error) {
+func (m service) fetchTranscriptsForVideos(videoUrls []string, language string) ([]yt_transcript_models.Transcript, error) {
 
 	results := make(chan transcriptServiceResults, len(videoUrls))
 	var wg sync.WaitGroup
@@ -46,7 +48,7 @@ func (m service) fetchTranscriptsForVideos(videoUrls []string) ([]yt_transcript_
 		wg.Add(1)
 		go func(videoURL string) {
 			defer wg.Done()
-			transcript, err := m.transcriptService.GetTranscripts(videoURL, []string{"en"})
+			transcript, err := m.transcriptService.GetTranscripts(videoURL, []string{language})
 			results <- transcriptServiceResults{
 				transcripts: transcript,
 				err:         err,
@@ -109,12 +111,13 @@ func (m *service) generateMarkdownFileFromTranscripts(ctx context.Context, trans
 	previous_response := ""
 	*statusChan <- fmt.Sprintf("Progress: %v%%", percent_done)
 
+	language := display.English.Tags().Name(language.MustParse(transcripts[0].LanguageCode))
 	for i, chunk := range chunks {
 		context_prompt := ""
 		if previous_response != "" {
 			context_prompt = fmt.Sprintf("The following text is a continuation... \nPrevious response: \n %s \n \n New text to process(Do Not Repeat the Previous response:): \n", previous_response)
 		}
-		formatted_prompt := strings.ReplaceAll(prompt, "[Language]", "English")
+		formatted_prompt := strings.ReplaceAll(prompt, "[Language]", language)
 
 		full_prompt := fmt.Sprintf("%s%s \n\n %s", context_prompt, formatted_prompt, chunk)
 
@@ -173,12 +176,15 @@ func (m *service) generateMarkdownFromTranscripts(ctx context.Context, transcrip
 
 	previous_response := ""
 
+	language := display.English.Tags().Name(language.MustParse(transcripts[0].LanguageCode))
+
 	for _, chunk := range chunks {
 		context_prompt := ""
 		if previous_response != "" {
 			context_prompt = fmt.Sprintf("The following text is a continuation... \nPrevious response: \n %s \n \n New text to process(Do Not Repeat the Previous response:): \n", previous_response)
 		}
-		formatted_prompt := strings.ReplaceAll(prompt, "[Language]", "English")
+
+		formatted_prompt := strings.ReplaceAll(prompt, "[Language]", language)
 
 		full_prompt := fmt.Sprintf("%s%s \n\n %s", context_prompt, formatted_prompt, chunk)
 

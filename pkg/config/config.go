@@ -9,8 +9,7 @@ type Config struct {
 
 func New(opts ...Option) *Config {
 	cfg := &Config{
-		Timeout:   60,
-		Languages: []string{"en"},
+		Timeout: 60,
 	}
 
 	for _, opt := range opts {

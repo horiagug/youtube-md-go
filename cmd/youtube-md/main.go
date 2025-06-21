@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/horiagug/youtube-md-go/pkg/config"
@@ -22,7 +21,7 @@ func getGeminiAPIKey() (string, error) {
 
 func main() {
 	var (
-		languages      = flag.String("languages", "en", "Comma-separated list of language codes")
+		language       = flag.String("language", "en", "Language code for the language to use. Default to english")
 		geminiAPIKey   = flag.String("gemini-api-key", "", "Gemini API Key")
 		geminiAPIModel = flag.String("gemini-api-model", "gemini-2.0-flash", "Gemini API Model")
 		timeout        = flag.Duration("timeout", 60*time.Second, "Operation timeout")
@@ -41,7 +40,6 @@ func main() {
 
 	cfg := config.New(
 		config.WithGeminiAPIKey(*geminiAPIKey),
-		config.WithLanguages(strings.Split(*languages, ",")),
 		config.WithGeminiModel(*geminiAPIModel),
 	)
 
@@ -69,13 +67,13 @@ func main() {
 	}()
 
 	if *file == true {
-		err := client.GenerateMarkdownFile(flag.Arg(0), statusChan)
+		err := client.GenerateMarkdownFile(flag.Arg(0), *language, &statusChan)
 		if err != nil {
 			log.Fatalf("Failed to generate markdown: %v", err)
 		}
 		doneChan <- true
 	} else {
-		res, err := client.GenerateMarkdown(flag.Arg(0))
+		res, err := client.GenerateMarkdown(flag.Arg(0), *language)
 		if err != nil {
 			log.Fatalf("Failed to generate markdown: %v", err)
 			doneChan <- true

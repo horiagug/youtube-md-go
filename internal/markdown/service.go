@@ -10,9 +10,9 @@ import (
 )
 
 type Service interface {
-	GenerateMarkdownFile(ctx context.Context, videoID string, statusChan *chan string) error
-	GenerateMarkdown(ctx context.Context, videoID string) (string, error)
-	GenerateMarkdownData(ctx context.Context, videoID string) (*MarkdownData, error)
+	GenerateMarkdownFile(ctx context.Context, videoID string, language string, statusChan *chan string) error
+	GenerateMarkdown(ctx context.Context, videoID string, language string) (string, error)
+	GenerateMarkdownData(ctx context.Context, videoID string, language string) (*MarkdownData, error)
 }
 
 type service struct {
@@ -44,14 +44,14 @@ func NewService(ctx context.Context, cfg *config.Config) (service, error) {
 	}, nil
 }
 
-func (m service) GenerateMarkdown(ctx context.Context, videoUrl string) (string, error) {
+func (m service) GenerateMarkdown(ctx context.Context, videoUrl string, language string) (string, error) {
 	videoURLs, err := m.getVideosFromUrl(videoUrl)
 
 	if err != nil {
 		return "", fmt.Errorf("Error getting video from url")
 	}
 
-	transcripts, err := m.fetchTranscriptsForVideos(videoURLs)
+	transcripts, err := m.fetchTranscriptsForVideos(videoURLs, language)
 	if err != nil {
 		return "", fmt.Errorf("Error fetching transcripts: %v", err)
 	}
@@ -63,7 +63,7 @@ func (m service) GenerateMarkdown(ctx context.Context, videoUrl string) (string,
 	return markdown_text, nil
 }
 
-func (m service) GenerateMarkdownFile(ctx context.Context, videoUrl string, statusChan *chan string) error {
+func (m service) GenerateMarkdownFile(ctx context.Context, videoUrl string, language string, statusChan *chan string) error {
 	*statusChan <- fmt.Sprintf("Processing video: %v", videoUrl)
 	videoURLs, err := m.getVideosFromUrl(videoUrl)
 
@@ -73,7 +73,7 @@ func (m service) GenerateMarkdownFile(ctx context.Context, videoUrl string, stat
 
 	*statusChan <- fmt.Sprintf("Fetching transcripts for %v videos", len(videoURLs))
 
-	transcripts, err := m.fetchTranscriptsForVideos(videoURLs)
+	transcripts, err := m.fetchTranscriptsForVideos(videoURLs, language)
 	if err != nil {
 		return fmt.Errorf("Error fetching transcripts: %v", err)
 	}
@@ -94,14 +94,14 @@ type MarkdownData struct {
 	VideoTitle string
 }
 
-func (m service) GenerateMarkdownData(ctx context.Context, videoUrl string) (*MarkdownData, error) {
+func (m service) GenerateMarkdownData(ctx context.Context, videoUrl string, language string) (*MarkdownData, error) {
 	videoURLs, err := m.getVideosFromUrl(videoUrl)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error getting video from url")
 	}
 
-	transcripts, err := m.fetchTranscriptsForVideos(videoURLs)
+	transcripts, err := m.fetchTranscriptsForVideos(videoURLs, language)
 	if err != nil {
 		return nil, fmt.Errorf("Error fetching transcripts: %v", err)
 	}
