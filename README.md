@@ -89,12 +89,20 @@ The tool generates a markdown file (`output.md`) containing the structured conte
 
 ## Supported Gemini Models
 
+### Legacy Models (being phased out):
 - gemini-1.5-flash
 - gemini-1.5-pro
-- gemini-2.0-flash
+
+### Current Models:
+- gemini-2.0-flash (default)
 - gemini-2.0-flash-thinking-exp-01-21
-- gemini-2.5-flash
-- gemini-2.5-pro
+
+### Latest Models (2025):
+- gemini-2.5-flash (recommended for speed)
+- gemini-2.5-pro (recommended for quality)
+- gemini-2.5-flash-lite (optimized for cost and speed)
+
+Note: Gemini 2.5 models are "thinking models" with enhanced reasoning capabilities, providing better accuracy and performance.
 
 ## Contributing
 

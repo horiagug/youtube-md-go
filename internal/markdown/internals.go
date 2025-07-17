@@ -74,51 +74,44 @@ func (m service) fetchTranscriptsForVideos(videoUrls []string, language string) 
 }
 
 func (m *service) generateMarkdownFileFromTranscripts(ctx context.Context, transcripts []yt_transcript_models.Transcript, statusChan *chan string) error {
-	var chunks []string
-	currentChunk := make([]string, 0, 3000)
-	wordCount := 0
-
+	var fullText strings.Builder
 	for _, transcript := range transcripts {
 		for _, line := range transcript.Lines {
-			words := strings.Fields(line.Text)
-
-			for _, word := range words {
-				currentChunk = append(currentChunk, word)
-				wordCount++
-
-				if wordCount >= 3000 {
-					// Join current chunk and add to chunks slice
-					chunks = append(chunks, strings.Join(currentChunk, " "))
-					// Reset for next chunk
-					currentChunk = make([]string, 0, 3000)
-					wordCount = 0
-				}
-			}
+			fullText.WriteString(line.Text)
+			fullText.WriteString(" ")
 		}
 	}
 
-	if wordCount > 0 {
-		chunks = append(chunks, strings.Join(currentChunk, " "))
+	text := fullText.String()
+	words := strings.Fields(text)
+
+	var chunks []string
+	chunkSize := 6000
+
+	for i := 0; i < len(words); i += chunkSize {
+		end := i + chunkSize
+		if end > len(words) {
+			end = len(words)
+		}
+		chunks = append(chunks, strings.Join(words[i:end], " "))
 	}
 
 	file, err := os.OpenFile("output.md", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return fmt.Errorf("Error opening file: %v", err)
 	}
-
-	percent_done := 0
 	defer file.Close()
-	previous_response := ""
-	*statusChan <- fmt.Sprintf("Progress: %v%%", percent_done)
 
 	language := display.English.Tags().Name(language.MustParse(transcripts[0].LanguageCode))
+	previous_response := ""
+	*statusChan <- fmt.Sprintf("Progress: %v%%", 0)
+
 	for i, chunk := range chunks {
 		context_prompt := ""
 		if previous_response != "" {
 			context_prompt = fmt.Sprintf("The following text is a continuation... \nPrevious response: \n %s \n \n New text to process(Do Not Repeat the Previous response:): \n", previous_response)
 		}
 		formatted_prompt := strings.ReplaceAll(prompt, "[Language]", language)
-
 		full_prompt := fmt.Sprintf("%s%s \n\n %s", context_prompt, formatted_prompt, chunk)
 
 		parts := []*genai.Part{
@@ -138,54 +131,45 @@ func (m *service) generateMarkdownFileFromTranscripts(ctx context.Context, trans
 		}
 		previous_response = responseText
 
-		percent_done = int((float64(i+1) / float64(len(chunks))) * 100)
+		percent_done := int((float64(i+1) / float64(len(chunks))) * 100)
 		*statusChan <- fmt.Sprintf("Progress: %v%%", percent_done)
 	}
 	return nil
 }
 
 func (m *service) generateMarkdownFromTranscripts(ctx context.Context, transcripts []yt_transcript_models.Transcript) (string, error) {
-	var chunks []string
-	currentChunk := make([]string, 0, 3000)
-	wordCount := 0
-
+	var fullText strings.Builder
 	for _, transcript := range transcripts {
 		for _, line := range transcript.Lines {
-			words := strings.Fields(line.Text)
-
-			for _, word := range words {
-				currentChunk = append(currentChunk, word)
-				wordCount++
-
-				if wordCount >= 3000 {
-					// Join current chunk and add to chunks slice
-					chunks = append(chunks, strings.Join(currentChunk, " "))
-					// Reset for next chunk
-					currentChunk = make([]string, 0, 3000)
-					wordCount = 0
-				}
-			}
+			fullText.WriteString(line.Text)
+			fullText.WriteString(" ")
 		}
 	}
 
-	if wordCount > 0 {
-		chunks = append(chunks, strings.Join(currentChunk, " "))
+	text := fullText.String()
+	words := strings.Fields(text)
+
+	var chunks []string
+	chunkSize := 6000
+
+	for i := 0; i < len(words); i += chunkSize {
+		end := i + chunkSize
+		if end > len(words) {
+			end = len(words)
+		}
+		chunks = append(chunks, strings.Join(words[i:end], " "))
 	}
 
-	var response_string string
-
-	previous_response := ""
-
 	language := display.English.Tags().Name(language.MustParse(transcripts[0].LanguageCode))
+	var responseBuilder strings.Builder
+	previous_response := ""
 
 	for _, chunk := range chunks {
 		context_prompt := ""
 		if previous_response != "" {
 			context_prompt = fmt.Sprintf("The following text is a continuation... \nPrevious response: \n %s \n \n New text to process(Do Not Repeat the Previous response:): \n", previous_response)
 		}
-
 		formatted_prompt := strings.ReplaceAll(prompt, "[Language]", language)
-
 		full_prompt := fmt.Sprintf("%s%s \n\n %s", context_prompt, formatted_prompt, chunk)
 
 		parts := []*genai.Part{
@@ -199,11 +183,10 @@ func (m *service) generateMarkdownFromTranscripts(ctx context.Context, transcrip
 		}
 
 		responseText := response.Candidates[0].Content.Parts[0].Text
-
-		response_string = response_string + responseText + "\n"
-
+		responseBuilder.WriteString(responseText)
+		responseBuilder.WriteString("\n")
 		previous_response = responseText
-
 	}
-	return response_string, nil
+
+	return responseBuilder.String(), nil
 }

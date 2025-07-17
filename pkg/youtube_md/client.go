@@ -20,10 +20,7 @@ func WithTimeout(timeout time.Duration) ClientOption {
 	return func(c *Client) {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		c.ctx = ctx
-		go func() {
-			<-ctx.Done()
-			cancel()
-		}()
+		_ = cancel
 	}
 }
 
@@ -37,7 +34,6 @@ func NewClient(cfg *config.Config, opts ...ClientOption) (*Client, error) {
 		opt(client)
 	}
 
-	// Initialize services
 	markdownService, err := markdown.NewService(client.ctx, cfg)
 	if err != nil {
 		return nil, err
