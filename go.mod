@@ -2,7 +2,7 @@ module github.com/horiagug/youtube-md-go
 
 go 1.23.6
 
-require github.com/horiagug/youtube-transcript-api-go v0.0.10
+require github.com/horiagug/youtube-transcript-api-go v0.0.11
 
 require (
 	golang.org/x/text v0.25.0
